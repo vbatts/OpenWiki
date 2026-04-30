@@ -35,6 +35,8 @@
     "copy": "Copy",
     "addToWiki": "Add to Wiki",
     "compiling": "Compiling...",
+    "wikiError": "Failed",
+    "wikiEmpty": "Nothing added",
     "deleteConfirmBtn": "Confirm?",
     "linkedKnowledge": "Linked knowledge",
     "imageContent": "Image content",

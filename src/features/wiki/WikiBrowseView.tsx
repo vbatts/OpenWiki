@@ -1,6 +1,7 @@
 import { useEffect, useCallback } from "react";
 import { BookOpen, User, FileText, GitCompare, Layers } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { listen } from "@tauri-apps/api/event";
 import { useWikiStore } from "../../stores/wikiStore";
 import { WikiPageCard } from "./WikiPageCard";
 import { WikiPageDetail } from "./WikiPageDetail";
@@ -23,6 +24,13 @@ export function WikiBrowseView() {
 
   useEffect(() => {
     loadPages();
+  }, [loadPages]);
+
+  useEffect(() => {
+    const unlisten = listen("wiki-compile-complete", () => {
+      loadPages();
+    });
+    return () => { unlisten.then((fn) => fn()); };
   }, [loadPages]);
 
   const handleNavigateToContent = useCallback((contentId: string) => {

@@ -117,15 +117,18 @@ pub async fn compile_content_to_wiki(
 ) -> Result<Vec<String>, String> {
     let db = state.db.clone();
     let _ = app.emit("wiki-compile-progress", "compiling");
+    log::info!("Wiki compile started for content_id={}", content_id);
 
     match wiki_engine::manual_compile(db.clone(), &content_id).await {
         Ok(touched_ids) => {
+            log::info!("Wiki compile complete for content_id={}: {} page(s) touched", content_id, touched_ids.len());
             // Auto-link pages by shared tags after compilation
             let _ = wiki_engine::link_pages_by_shared_tags(db);
             let _ = app.emit("wiki-compile-complete", &touched_ids);
             Ok(touched_ids)
         }
         Err(e) => {
+            log::error!("Wiki compile failed for content_id={}: {}", content_id, e);
             let _ = app.emit("wiki-compile-error", &e);
             Err(e)
         }

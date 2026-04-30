@@ -35,6 +35,8 @@
     "copy": "复制",
     "addToWiki": "入知识库",
     "compiling": "编译中...",
+    "wikiError": "失败",
+    "wikiEmpty": "未提取到知识",
     "deleteConfirmBtn": "确认?",
     "linkedKnowledge": "关联知识",
     "imageContent": "图片内容",
