@@ -6,6 +6,77 @@ on:
       - 'v*'
 
 jobs:
+  build-linux:
+    name: Build Linux (x86_64)
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install Linux system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libxdo-dev
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Prepare release body
+        id: release_body
+        shell: bash
+        run: |
+          TAG="${{ github.ref_name }}"
+          NOTES_FILE="release-notes/${TAG}.md"
+          EOF_MARKER="RELEASE_BODY_EOF_$(date +%s%N)"
+          {
+            echo "body<<${EOF_MARKER}"
+            if [ -f "$NOTES_FILE" ]; then
+              cat "$NOTES_FILE"
+            else
+              echo "OpenWiki ${TAG} Released!"
+              echo ""
+              echo "See the repository for details."
+            fi
+            echo "${EOF_MARKER}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build Tauri app (AppImage + deb)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'OpenWiki ${{ github.ref_name }}'
+          releaseBody: ${{ steps.release_body.outputs.body }}
+          releaseDraft: false
+          prerelease: false
+          args: --target x86_64-unknown-linux-gnu
+
   build-macos:
     name: Build macOS (${{ matrix.label }})
     runs-on: ${{ matrix.os }}

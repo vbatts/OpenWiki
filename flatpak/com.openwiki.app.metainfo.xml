@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.openwiki.app</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+
+  <name>OpenWiki</name>
+  <summary>AI-powered knowledge capture and management</summary>
+
+  <description>
+    <p>
+      OpenWiki is a desktop knowledge management tool that captures content from your
+      clipboard and screenshots, then uses AI to organize, summarize, and connect
+      everything into a personal wiki.
+    </p>
+    <p>Features include:</p>
+    <ul>
+      <li>Automatic clipboard and screenshot capture</li>
+      <li>AI-powered summaries and tagging</li>
+      <li>Personal wiki with linked knowledge graph</li>
+      <li>Weekly digest of captured content</li>
+      <li>MCP server integration for Claude Desktop</li>
+      <li>Export to Markdown</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">com.openwiki.app.desktop</launchable>
+
+  <url type="homepage">https://github.com/kdsz001/OpenWiki</url>
+  <url type="bugtracker">https://github.com/kdsz001/OpenWiki/issues</url>
+  <url type="vcs-browser">https://github.com/kdsz001/OpenWiki</url>
+
+  <developer id="com.openwiki">
+    <name>OpenWiki</name>
+  </developer>
+
+  <categories>
+    <category>Utility</category>
+    <category>Office</category>
+    <category>Documentation</category>
+  </categories>
+
+  <keywords>
+    <keyword>knowledge</keyword>
+    <keyword>wiki</keyword>
+    <keyword>notes</keyword>
+    <keyword>AI</keyword>
+    <keyword>clipboard</keyword>
+    <keyword>capture</keyword>
+  </keywords>
+
+  <!-- Replace with real screenshots before Flathub submission.
+       Host images at a stable URL (e.g. GitHub release assets or your own CDN).
+       Flathub requires at least one screenshot. -->
+  <screenshots>
+    <screenshot type="default">
+      <caption>Main content capture view</caption>
+      <image type="source">https://raw.githubusercontent.com/kdsz001/OpenWiki/main/flatpak/screenshots/main.png</image>
+    </screenshot>
+  </screenshots>
+
+  <releases>
+    <release version="0.3.4" date="2025-04-30">
+      <description>
+        <p>Linux support and various improvements.</p>
+      </description>
+    </release>
+    <release version="0.3.3" date="2025-04-01"/>
+    <release version="0.3.2" date="2025-03-15"/>
+  </releases>
+
+  <!-- OARS 1.1 — productivity app, no objectionable content -->
+  <content_rating type="oars-1.1"/>
+</component>

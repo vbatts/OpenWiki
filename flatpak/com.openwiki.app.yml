@@ -1,0 +1,108 @@
+id: com.openwiki.app
+
+# GNOME 47 runtime includes WebKitGTK 6.0 which Tauri 2 supports.
+# Bump to //48 or later when the SDK extensions catch up.
+runtime: org.gnome.Platform
+runtime-version: '47'
+sdk: org.gnome.Sdk
+
+# Rust and Node.js toolchains from the Freedesktop SDK extensions.
+# These are compatible with the GNOME 47 / Freedesktop 24.08 base.
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+  - org.freedesktop.Sdk.Extension.node20
+
+command: openwiki
+
+finish-args:
+  # Display: support both X11 (via XWayland) and native Wayland
+  - --share=ipc
+  - --socket=fallback-x11
+  - --socket=wayland
+  # GPU acceleration for WebKitGTK rendering
+  - --device=dri
+  # Network: AI API calls, updater checks, URL content reading
+  - --share=network
+  # Filesystem: screenshot monitoring, exports, imports
+  - --filesystem=xdg-pictures:rw
+  - --filesystem=xdg-desktop:ro
+  - --filesystem=xdg-download:rw
+  # System tray (StatusNotifierItem / AppIndicator)
+  - --talk-name=org.kde.StatusNotifierWatcher
+  - --talk-name=com.canonical.AppMenu.Registrar
+  # Desktop notifications
+  - --talk-name=org.freedesktop.Notifications
+  # Work around a WebKitGTK DMA-BUF crash inside the Flatpak sandbox
+  - --env=WEBKIT_DISABLE_DMABUF_RENDERER=1
+
+build-options:
+  # Add Rust and Node to PATH for the build
+  append-path: /usr/lib/sdk/rust-stable/bin:/usr/lib/sdk/node20/bin
+  env:
+    # Point cargo at the pre-fetched vendor registry (populated by cargo-sources.json)
+    CARGO_HOME: /run/build/openwiki/cargo
+    # npm cache dir populated by node-sources.json
+    npm_config_cache: /run/build/openwiki/npm-cache
+    # Ensure cargo build is fully offline
+    CARGO_NET_OFFLINE: 'true'
+
+modules:
+  - name: openwiki
+    buildsystem: simple
+    sources:
+      # Main source — pin to the release tag
+      - type: git
+        url: https://github.com/kdsz001/OpenWiki.git
+        tag: v0.3.4
+        commit: 0000000000000000000000000000000000000000  # replace with actual commit SHA
+
+      # --- Offline Cargo sources ---
+      # Generate with:
+      #   pip install flatpak-builder-tools
+      #   flatpak-cargo-generator src-tauri/Cargo.lock -o flatpak/cargo-sources.json
+      - cargo-sources.json
+
+      # --- Offline npm sources ---
+      # Generate with:
+      #   flatpak-node-generator npm package-lock.json -o flatpak/node-sources.json
+      - node-sources.json
+
+    build-commands:
+      # ── 1. Configure Cargo to use the vendored offline registry ──────────
+      - mkdir -p src-tauri/.cargo
+      - |
+        cat > src-tauri/.cargo/config.toml << 'EOF'
+        [source.crates-io]
+        replace-with = "vendored-sources"
+
+        [source.vendored-sources]
+        directory = "/run/build/openwiki/cargo/vendor"
+        EOF
+
+      # ── 2. Install npm packages from offline cache ────────────────────────
+      - npm ci --offline
+
+      # ── 3. Build the React/TypeScript frontend ────────────────────────────
+      - npm run build
+
+      # ── 4. Build the Tauri Rust backend (embeds the dist/ at compile time) ─
+      - cargo build --release --manifest-path src-tauri/Cargo.toml
+
+      # ── 5. Install the binary ─────────────────────────────────────────────
+      - install -Dm755 src-tauri/target/release/openwiki ${FLATPAK_DEST}/bin/openwiki
+
+      # ── 6. Icons ──────────────────────────────────────────────────────────
+      - install -Dm644 src-tauri/icons/32x32.png
+          ${FLATPAK_DEST}/share/icons/hicolor/32x32/apps/com.openwiki.app.png
+      - install -Dm644 src-tauri/icons/128x128.png
+          ${FLATPAK_DEST}/share/icons/hicolor/128x128/apps/com.openwiki.app.png
+      - install -Dm644 src-tauri/icons/128x128@2x.png
+          ${FLATPAK_DEST}/share/icons/hicolor/256x256/apps/com.openwiki.app.png
+
+      # ── 7. Desktop entry ──────────────────────────────────────────────────
+      - install -Dm644 flatpak/com.openwiki.app.desktop
+          ${FLATPAK_DEST}/share/applications/com.openwiki.app.desktop
+
+      # ── 8. AppStream metadata ─────────────────────────────────────────────
+      - install -Dm644 flatpak/com.openwiki.app.metainfo.xml
+          ${FLATPAK_DEST}/share/metainfo/com.openwiki.app.metainfo.xml

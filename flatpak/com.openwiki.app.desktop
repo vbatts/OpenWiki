@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=OpenWiki
+Comment=AI-powered knowledge capture and management
+Exec=openwiki
+Icon=com.openwiki.app
+Type=Application
+Categories=Utility;Office;Documentation;
+Keywords=knowledge;wiki;notes;AI;clipboard;capture;
+StartupNotify=true
+StartupWMClass=openwiki
